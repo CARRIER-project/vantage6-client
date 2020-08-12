@@ -11,23 +11,29 @@ by master containers).
 """
 import logging
 import typing
+<<<<<<< Updated upstream
 
 import jwt
 import requests
+=======
+from cryptography.hazmat.backends.openssl.rsa import _RSAPrivateKey
+>>>>>>> Stashed changes
 
 from vantage6.client.encryption import Cryptor, NoCryptor
 from vantage6.client.util import (
     prepare_bytes_for_transport,
     unpack_bytes_from_transport
 )
+from vantage6.client import encryption
 
 module_name = __name__.split('.')[1]
+
 
 class ServerInfo(typing.NamedTuple):
     """ Data-class to store the server info
     """
     host: str
-    port: int 
+    port: int
     path: str
 
 
@@ -41,11 +47,11 @@ class WhoAmI(typing.NamedTuple):
     organization_id: int
 
     def __repr__(self) -> str:
-        return (f"<WhoAmI " 
-            f"name={self.name}, "
-            f"type={self.type_}, "
-            f"organization={self.organization_name}"
-        ">")
+        return (f"<WhoAmI "
+                f"name={self.name}, "
+                f"type={self.type_}, "
+                f"organization={self.organization_name}"
+                ">")
 
 
 class ClientBaseProtocol:
@@ -55,8 +61,8 @@ class ClientBaseProtocol:
         allows for authentication task creation and result retrieval.
     """
 
-    def __init__(self, host: str, port: int, path: str='/api', 
-        private_key_file:str=None):
+    def __init__(self, host: str, port: int, path: str = '/api',
+                 private_key_file: str = None):
         """ Initialization of the communcation protocol class.
 
             :param host: hostname/ip including protocol (http/https)
@@ -83,7 +89,7 @@ class ClientBaseProtocol:
 
         self.cryptor = None
         self.whoami = None
-    
+
     def generate_path_to(self, endpoint: str):
         """ Generate URL from host, port and endpoint.
 
@@ -96,8 +102,8 @@ class ClientBaseProtocol:
 
         self.log.debug(f"Generated path to {path}")
         return path
-    
-    def request(self, endpoint: str, json: dict=None, method: str='get', params=None):
+
+    def request(self, endpoint: str, json: dict = None, method: str = 'get', params=None):
         """ Create HTTP(S) request to the central server.
         
             It can contain a payload (JSON) in case of a POST method. 
@@ -131,7 +137,7 @@ class ClientBaseProtocol:
             # self.log.debug(f"Server did respond code={response.status_code}\
             #     and message={response.get('msg', 'None')}")
             self.log.error(f'Server responded with error code: {response.status_code} ')
-            self.log.debug(response.json().get("msg",""))
+            self.log.debug(response.json().get("msg", ""))
 
             # FIXME: this should happen only *once* to prevent infinite recursion!
             # refresh token and try again
@@ -140,7 +146,7 @@ class ClientBaseProtocol:
 
         # self.log.debug(f"Response data={response.json()}")
         return response.json()
-    
+
     def setup_encryption(self, private_key_file, disabled=False) -> Cryptor:
         """ Enable the encryption module for the communcation.
 
@@ -168,9 +174,9 @@ class ClientBaseProtocol:
         cryptor = CRYPTOR_CLASS(private_key_file)
         if disabled:
             self.cryptor = cryptor
-            return 
-        
-        # check if the public-key is the same on the server. If this is 
+            return
+
+            # check if the public-key is the same on the server. If this is
         # not the case, this node will not be able to read any messages 
         # that are send to him! If this is the case, the new public_key 
         # will be uploaded to the central server
@@ -181,21 +187,21 @@ class ClientBaseProtocol:
         if pub_key:
             if cryptor.verify_public_key(pub_key):
                 self.log.info("Public key matches the server key! Good to go!")
-            else: 
+            else:
                 self.log.critical(
                     "Local public key does not match server public key. "
                     "You will not able to read any messages that are intended "
                     "for you!"
                 )
                 upload_pub_key = True
-        else: 
+        else:
             upload_pub_key = True
-        
+
         # upload public key if required
         if upload_pub_key:
             self.request(
-                f"organization/{self.whoami.organization_id}", 
-                method="patch", 
+                f"organization/{self.whoami.organization_id}",
+                method="patch",
                 json={
                     "public_key": cryptor.public_key_str
                 }
@@ -222,7 +228,7 @@ class ClientBaseProtocol:
         url = self.generate_path_to(path)
         response = requests.post(url, json=credentials)
         data = response.json()
-        
+
         # handle negative responses    
         if response.status_code > 200:
             self.log.critical(f"Failed to authenticate {data.get('msg')}")
@@ -244,7 +250,6 @@ class ClientBaseProtocol:
         assert self.__refresh_url, \
             "Refresh URL not found, did you authenticate?"
 
-        
         # if no port is specified explicit, then it should be omnit the
         # colon : in the path. Similar (but different) to the property
         # base_path
@@ -252,7 +257,7 @@ class ClientBaseProtocol:
             url = f"{self.__host}:{self.__port}{self.__refresh_url}"
         else:
             url = f"{self.__host}{self.__refresh_url}"
-        
+
         # send request to server
         response = requests.post(url, headers={
             'Authorization': 'Bearer ' + self.__refresh_token
@@ -297,14 +302,14 @@ class ClientBaseProtocol:
 
         return self.request('task', method='post', json={
             "name": name,
-            "image": image, 
+            "image": image,
             "collaboration_id": collaboration_id,
             "description": description,
             "organizations": organization_json_list
         })
 
-    def get_results(self, id=None, state=None, include_task=False, 
-        task_id=None, node_id=None):
+    def get_results(self, id=None, state=None, include_task=False,
+                    task_id=None, node_id=None):
         """ Get task result(s) from the central server.
 
             Depending if a `id` is specified or not, either a single or
@@ -342,10 +347,10 @@ class ClientBaseProtocol:
             params['task_id'] = task_id
         if node_id:
             params['node_id'] = node_id
-        
+
         self.log.debug(f"obtaining results using params={params}")
         results = self.request(
-            endpoint='result' if not id else f'result/{id}', 
+            endpoint='result' if not id else f'result/{id}',
             params=params
         )
         results_unencrypted = []
@@ -359,14 +364,14 @@ class ClientBaseProtocol:
                         result["result"] = self.cryptor.decrypt_bytes_from_base64(
                             result["result"]
                         )
-                        
+
                 except ValueError as e:
                     self.log.warn(
                         "Could not decrypt (or unpack in case no encryption "
                         "is used) input."
                     )
                     self.log.debug(e)
-                    
+
                 results_unencrypted.append(result)
             return results_unencrypted
         else:
@@ -385,7 +390,6 @@ class ClientBaseProtocol:
                 self.log.debug(e)
             return results
 
-
     @property
     def headers(self):
         """ Headers that are send with each request. 
@@ -394,7 +398,7 @@ class ClientBaseProtocol:
             return {'Authorization': 'Bearer ' + self._access_token}
         else:
             return {}
-    
+
     @property
     def token(self):
         """ Authorization token. 
@@ -406,7 +410,7 @@ class ClientBaseProtocol:
         """ Host including protocol (HTTP/HTTPS). 
         """
         return self.__host
-    
+
     @property
     def port(self):
         """ Port from the central server. 
@@ -432,7 +436,7 @@ class ClientBaseProtocol:
 class ClientUserProtocol(ClientBaseProtocol):
     """ User interface to the central server.
     """
-    
+
     def authenticate(self, username: str, password: str):
         """ User authentication at the central server.
 
@@ -465,6 +469,7 @@ class ClientUserProtocol(ClientBaseProtocol):
             organization_id=organization_id,
             organization_name=organization_name
         )
+
 
 # creat a simple alias
 Client = ClientUserProtocol
