@@ -11,13 +11,9 @@ by master containers).
 """
 import logging
 import typing
-<<<<<<< Updated upstream
 
 import jwt
 import requests
-=======
-from cryptography.hazmat.backends.openssl.rsa import _RSAPrivateKey
->>>>>>> Stashed changes
 
 from vantage6.client.encryption import Cryptor, NoCryptor
 from vantage6.client.util import (
@@ -267,11 +263,11 @@ class ClientBaseProtocol:
         if response.status_code != 200:
             self.log.critical("Could not refresh token")
             raise Exception("Authentication Error!")
-        
+
         self._access_token = response.json()["access_token"]
 
-    def post_task(self, name:str, image:str, collaboration_id:int, 
-        input_:bytes=b'', description='', organization_ids:list=[]) -> dict:
+    def post_task(self, name: str, image: str, collaboration_id: int,
+                  input_: bytes = b'', description='', organization_ids: list = []) -> dict:
         """ Post a new task at the server.
 
             It will also encrypt `input_` for each receiving 
