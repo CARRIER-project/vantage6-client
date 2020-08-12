@@ -10,17 +10,14 @@ an interface for algorithms to the central server (this is mainly used
 by master containers).
 """
 import logging
-import requests
-import time
-import jwt
-import datetime
 import typing
 
-from cryptography.hazmat.backends.openssl.rsa import _RSAPrivateKey
+import jwt
+import requests
 
 from vantage6.client.encryption import Cryptor, NoCryptor
 from vantage6.client.util import (
-    prepare_bytes_for_transport, 
+    prepare_bytes_for_transport,
     unpack_bytes_from_transport
 )
 
