@@ -301,7 +301,7 @@ class ClientBaseProtocol(object):
         self._access_token = response.json()["access_token"]
 
     def post_task(self, name: str, image: str, collaboration_id: int,
-                  input_: bytes = b'', description='', organization_ids: list = None) -> dict:
+                  input_: '', description='', organization_ids: list = None) -> dict:
         """ Post a new task at the server.
 
             It will also encrypt `input_` for each receiving
